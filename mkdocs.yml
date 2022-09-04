@@ -95,3 +95,5 @@ markdown_extensions:
       custom_checkbox: true
   - pymdownx.tilde
   - mdx_truly_sane_lists
+plugins:
+    - drawio-exporter
