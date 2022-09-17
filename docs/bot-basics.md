@@ -75,3 +75,6 @@ This loop will be repeated again and again until the bot is stopped.
 
 !!! Note
     Both Backtesting and Hyperopt include exchange default Fees in the calculation. Custom fees can be passed to backtesting / hyperopt by specifying the `--fee` argument.
+
+
+![Backtest logic](diagrams/backtest_logic.drawio)
