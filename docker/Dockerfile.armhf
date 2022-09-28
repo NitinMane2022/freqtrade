@@ -95,7 +95,6 @@ RUN  apt-get update \
   && pip install --upgrade pip \
   && echo "[global]\nextra-index-url=https://www.piwheels.org/simple" > /etc/pip.conf
 
-WORKDIR /freqtrade
 # Install TA-lib
 COPY build_helpers/* /tmp/
 RUN cd /tmp && /tmp/install_ta-lib.sh && rm -r /tmp/*ta-lib*
@@ -104,7 +103,6 @@ ENV LD_LIBRARY_PATH /usr/local/lib
 # Install dependencies
 COPY --chown=ftuser:ftuser requirements.txt /freqtrade/
 USER ftuser
-
 
 COPY --from=pyarrow-deps /build/arrow/python/dist/pyarrow-*.whl .
 
