@@ -85,7 +85,7 @@ ENV PYARROW_BUNDLE_ARROW_CPP=1
 
 WORKDIR /build/arrow/python
 RUN pip install -r requirements-wheel-build.txt \
-  && python3 setup.py build_ext --build-type=$ARROW_BUILD_TYPE --bundle-arrow-cpp bdist_wheel
+  && python3 setup.py build_ext --build-type="release" --bundle-arrow-cpp bdist_wheel
 # end pyarrow build
 
 # Install dependencies
