@@ -337,7 +337,7 @@ jobs:
           webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
 
   deploy:
-    needs: [ build_linux, build_macos, build_windows, docs_check, mypy_version_check, pre-commit ]
+    # needs: [ build_linux, build_macos, build_windows, docs_check, mypy_version_check, pre-commit ]
     runs-on: ubuntu-20.04
 
     if: (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'release') && github.repository == 'freqtrade/freqtrade'

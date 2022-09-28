@@ -19,7 +19,7 @@ echo "${GITHUB_SHA}" > freqtrade_commit
 if [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then
     echo "event ${GITHUB_EVENT_NAME}: full rebuild - skipping cache"
     # Build regular image
-    docker build -t freqtrade:${TAG} .
+    # docker build -t freqtrade:${TAG} .
     # Build PI image
     docker buildx build \
         --cache-to=type=registry,ref=${CACHE_TAG} \
@@ -29,8 +29,8 @@ if [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then
 else
     echo "event ${GITHUB_EVENT_NAME}: building with cache"
     # Build regular image
-    docker pull ${IMAGE_NAME}:${TAG}
-    docker build --cache-from ${IMAGE_NAME}:${TAG} -t freqtrade:${TAG} .
+    # docker pull ${IMAGE_NAME}:${TAG}
+    # docker build --cache-from ${IMAGE_NAME}:${TAG} -t freqtrade:${TAG} .
 
     # Pull last build to avoid rebuilding the whole image
     # docker pull --platform ${PI_PLATFORM} ${IMAGE_NAME}:${TAG}
