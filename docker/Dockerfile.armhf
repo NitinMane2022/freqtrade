@@ -20,6 +20,73 @@ RUN mkdir /freqtrade \
 
 WORKDIR /freqtrade
 
+FROM base as pyarrow-deps
+# start pyarrow build
+ARG ARROW_VERSION=9.0.0
+
+RUN apt-get update \
+    && apt-get -y install \
+        autoconf \
+        bison \
+        ca-certificates \
+        cmake \
+        curl \
+        cython3 \
+        flex \
+        g++ \
+        gcc \
+        libboost-dev \
+        libboost-filesystem-dev \
+        libboost-regex-dev \
+        libboost-system-dev \
+	libgflags-dev \
+	libutf8proc-dev\
+        libjemalloc-dev \
+        libssl-dev \
+        make \
+        ninja-build \
+        pkg-config \
+        rapidjson-dev \
+        tzdata \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN echo "[global]\nextra-index-url=https://www.piwheels.org/simple" > /etc/pip.conf \
+  && pip install wheel setuptools numpy pandas==1.4.3 psutil
+
+WORKDIR /build/arrow
+RUN curl --silent --show-error --fail --location \
+      https://github.com/apache/arrow/archive/apache-arrow-${ARROW_VERSION}.tar.gz \
+  | tar --strip-components=1 -xz
+
+ENV ARROW_HOME=/dist
+ENV CMAKE_BUILD_PARALLEL_LEVEL=3
+
+WORKDIR /build/arrow/cpp/release
+RUN cmake \
+    -DPYTHON_EXECUTABLE=/usr/bin/python3 \
+    -DCMAKE_INSTALL_PREFIX=$ARROW_HOME \
+    -DCMAKE_INSTALL_LIBDIR=lib \
+    -DARROW_WITH_BZ2=ON \
+    -DARROW_WITH_ZLIB=ON \
+    -DARROW_WITH_ZSTD=ON \
+    -DARROW_WITH_LZ4=ON \
+    -DARROW_WITH_SNAPPY=ON \
+    -DARROW_PARQUET=ON \
+    -DARROW_PYTHON=ON \
+    -DARROW_BUILD_TESTS=OFF \
+          .. \
+ && make -j 3 \
+ && make install
+
+ENV PYARROW_CMAKE_GENERATOR=Ninja
+ENV PYARROW_CMAKE_OPTIONS="-DARROW_USE_LD_GOLD=ON"
+ENV PYARROW_WITH_PLASMA=1
+ENV PYARROW_BUNDLE_ARROW_CPP=1
+
+WORKDIR /build/arrow/python
+RUN python3 setup.py build_ext --build-type=$ARROW_BUILD_TYPE --bundle-arrow-cpp bdist_wheel
+# end pyarrow build
+
 # Install dependencies
 FROM base as python-deps
 RUN  apt-get update \
@@ -28,6 +95,7 @@ RUN  apt-get update \
   && pip install --upgrade pip \
   && echo "[global]\nextra-index-url=https://www.piwheels.org/simple" > /etc/pip.conf
 
+WORKDIR /freqtrade
 # Install TA-lib
 COPY build_helpers/* /tmp/
 RUN cd /tmp && /tmp/install_ta-lib.sh && rm -r /tmp/*ta-lib*
@@ -36,7 +104,12 @@ ENV LD_LIBRARY_PATH /usr/local/lib
 # Install dependencies
 COPY --chown=ftuser:ftuser requirements.txt /freqtrade/
 USER ftuser
+
+
+COPY --from=pyarrow-deps /build/arrow/python/dist/pyarrow-*.whl .
+
 RUN  pip install --user --no-cache-dir numpy \
+  && pip install pyarrow-*.whl \
   && pip install --user --no-cache-dir -r requirements.txt
 
 # Copy dependencies to runtime-image
