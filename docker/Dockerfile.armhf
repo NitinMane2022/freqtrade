@@ -74,6 +74,7 @@ RUN cmake \
     -DARROW_PARQUET=ON \
     -DARROW_PYTHON=ON \
     -DARROW_BUILD_TESTS=OFF \
+    -DARROW_PLASMA=ON \
           .. \
  && make -j 3 \
  && make install
@@ -82,6 +83,7 @@ ENV PYARROW_CMAKE_GENERATOR=Ninja
 ENV PYARROW_CMAKE_OPTIONS="-DARROW_USE_LD_GOLD=ON"
 ENV PYARROW_WITH_PLASMA=1
 ENV PYARROW_BUNDLE_ARROW_CPP=1
+
 
 WORKDIR /build/arrow/python
 RUN pip install -r requirements-wheel-build.txt \
@@ -108,7 +110,7 @@ COPY --chown=ftuser:ftuser requirements.txt /freqtrade/
 USER ftuser
 
 RUN  pip install --user --no-cache-dir numpy \
-  && pip install pyarrow-*.whl \
+  && pip install --user pyarrow-*.whl \
   && pip install --user --no-cache-dir -r requirements.txt
 
 # Copy dependencies to runtime-image
